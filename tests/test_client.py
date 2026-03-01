@@ -9,11 +9,21 @@ def mock_aioresponse():
 
 @pytest.mark.asyncio
 async def test_mesh_client_list_tools(mock_aioresponse):
-    mock_aioresponse.get('http://127.0.0.1:8080/tools', payload={'tools': ['test_tool']})
+    mock_payload = {
+        'tools': {
+            'test_tool': {
+                'name': 'test_tool',
+                'description': 'A dummy tool',
+                'parameters': {}
+            }
+        }
+    }
+    mock_aioresponse.get('http://127.0.0.1:8080/tools', payload=mock_payload)
     
     async with MeshClient("127.0.0.1", 8080) as client:
         tools = await client.list_tools()
         assert "test_tool" in tools
+        assert tools["test_tool"]["name"] == "test_tool"
 
 @pytest.mark.asyncio
 async def test_mesh_client_execute_tool(mock_aioresponse):

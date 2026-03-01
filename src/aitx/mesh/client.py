@@ -18,8 +18,8 @@ class MeshClient:
         if self.session:
             await self.session.close()
 
-    async def list_tools(self) -> list[str]:
-        """Fetch the list of tools available on the node."""
+    async def list_tools(self) -> dict[str, Any]:
+        """Fetch the list of tools and their schemas available on the node."""
         if not self.session:
             raise RuntimeError("Client session not initialized. Use 'async with MeshClient(...):'")
         
@@ -27,7 +27,7 @@ class MeshClient:
             if response.status != 200:
                 raise RuntimeError(f"Failed to fetch tools: {response.status}")
             data = await response.json()
-            return data.get("tools", [])
+            return data.get("tools", {})
 
     async def execute(self, tool_name: str, arguments: dict[str, Any] | None = None) -> Any:
         """Execute a tool on the remote node."""
