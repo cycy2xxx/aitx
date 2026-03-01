@@ -1,2 +1,3 @@
 from .node import MeshNode
-__all__ = ["MeshNode"]
+from .client import MeshClient
+__all__ = ["MeshNode", "MeshClient"]
