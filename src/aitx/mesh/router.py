@@ -64,15 +64,16 @@ class MeshRouter:
         self._tool_index: dict[str, str] = {}
         self._zeroconf: Zeroconf | None = None
         self._browser: ServiceBrowser | None = None
+        self._loop: asyncio.AbstractEventLoop | None = None
 
     # ── lifecycle ──────────────────────────────────────────────────────
 
     async def start(self) -> None:
         """Start discovering mesh nodes on the local network."""
-        loop = asyncio.get_running_loop()
-        self._zeroconf = await loop.run_in_executor(None, Zeroconf)
+        self._loop = asyncio.get_running_loop()
+        self._zeroconf = await self._loop.run_in_executor(None, Zeroconf)
         listener = _RouterListener(self)
-        self._browser = await loop.run_in_executor(
+        self._browser = await self._loop.run_in_executor(
             None, ServiceBrowser, self._zeroconf, self.SERVICE_TYPE, listener
         )
         logger.info("MeshRouter started — listening for AITX nodes")
@@ -97,8 +98,10 @@ class MeshRouter:
 
     def _register_node(self, name: str, host: str, port: int) -> None:
         self.nodes[name] = {"host": host, "port": port, "tools": {}}
-        # Kick off async tool fetching in the background
-        asyncio.ensure_future(self._fetch_tools(name))
+        # Schedule async tool fetching back on the main event loop
+        # (this method is called from zeroconf's background thread)
+        if self._loop and self._loop.is_running():
+            asyncio.run_coroutine_threadsafe(self._fetch_tools(name), self._loop)
 
     def _unregister_node(self, name: str) -> None:
         if name in self.nodes:
