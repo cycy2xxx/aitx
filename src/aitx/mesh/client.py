@@ -29,13 +29,12 @@ class MeshClient:
             data = await response.json()
             return data.get("tools", [])
 
-    async def execute(self, tool_name: str, arguments: dict[str, Any]) -> Any:
+    async def execute(self, tool_name: str, arguments: dict[str, Any] | None = None) -> Any:
         """Execute a tool on the remote node."""
         if not self.session:
             raise RuntimeError("Client session not initialized. Use 'async with MeshClient(...):'")
             
-        payload = {"tool": tool_name, "arguments": object}
-        payload["arguments"] = arguments
+        payload = {"tool": tool_name, "arguments": arguments or {}}
         
         async with self.session.post(f"{self.base_url}/execute", json=payload) as response:
             data = await response.json()

@@ -20,5 +20,5 @@ async def test_mesh_client_execute_tool(mock_aioresponse):
     mock_aioresponse.post('http://127.0.0.1:8080/execute', payload={'result': 'success'})
     
     async with MeshClient("127.0.0.1", 8080) as client:
-        result = await client.execute("test_tool", {"arg": "value"})
+        result = await client.execute("test_tool")
         assert result == "success"
