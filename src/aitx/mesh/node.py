@@ -4,12 +4,26 @@ from typing import Callable, Any
 from aiohttp import web
 from .discovery import MeshAdvertiser
 
+# Fallback simple schema introspection since aitx.ir doesn't exist yet
+def _simple_introspect(func: Callable[..., Any]) -> dict[str, Any]:
+    return {
+        "name": func.__name__,
+        "description": inspect.getdoc(func) or "",
+        "parameters": {
+            "type": "object",
+            "properties": {}, # Basic mock, real IR would parse annotations
+        }
+    }
+
 def create_app(tools: list[Callable[..., Any]]) -> web.Application:
     app = web.Application()
     tools_by_name = {t.__name__: t for t in tools}
     
     async def list_tools(request: web.Request) -> web.Response:
-        return web.json_response({"tools": list(tools_by_name.keys())})
+        tools_info = {}
+        for name, t in tools_by_name.items():
+            tools_info[name] = _simple_introspect(t)
+        return web.json_response({"tools": tools_info})
         
     async def execute_tool(request: web.Request) -> web.Response:
         try:

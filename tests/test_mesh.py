@@ -16,7 +16,7 @@ async def test_mesh_app_creation():
     assert isinstance(app, web.Application)
 
 @pytest.mark.asyncio
-async def test_mesh_tools_endpoint(aiohttp_client):
+async def test_mesh_tools_endpoint_schemas(aiohttp_client):
     app = create_app([sample_tool])
     client = await aiohttp_client(app)
     
@@ -25,6 +25,8 @@ async def test_mesh_tools_endpoint(aiohttp_client):
     data = await resp.json()
     assert "tools" in data
     assert "sample_tool" in data["tools"]
+    assert "name" in data["tools"]["sample_tool"]
+    assert data["tools"]["sample_tool"]["name"] == "sample_tool"
 
 @pytest.mark.asyncio
 async def test_mesh_execute_endpoint(aiohttp_client):
