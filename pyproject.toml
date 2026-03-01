@@ -47,9 +47,9 @@ dev = [
 aitx = "aitx.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/cy2/aitx"
-Repository = "https://github.com/cy2/aitx"
-Issues = "https://github.com/cy2/aitx/issues"
+Homepage = "https://github.com/cycy2xxx/aitx"
+Repository = "https://github.com/cycy2xxx/aitx"
+Issues = "https://github.com/cycy2xxx/aitx/issues"
 
 [build-system]
 requires = ["hatchling"]
