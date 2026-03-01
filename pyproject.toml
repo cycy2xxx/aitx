@@ -1,0 +1,75 @@
+[project]
+name = "aitx"
+version = "0.1.0"
+description = "AI Tool eXchange — Write a Python function, use it as a tool on any AI platform"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+authors = [
+    { name = "cy2" },
+]
+keywords = ["ai", "mcp", "openai", "gemini", "anthropic", "tool", "agent", "interop"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries",
+    "Typing :: Typed",
+]
+dependencies = [
+    "pydantic>=2.10",
+]
+
+[project.optional-dependencies]
+openai = ["openai>=1.50"]
+anthropic = ["anthropic>=0.40"]
+mcp = ["mcp>=1.0"]
+gemini = ["google-genai>=1.0"]
+cli = ["click>=8.1"]
+swarm = ["zeroconf>=0.131.0", "aiohttp>=3.9.0"]
+all = ["aitx[openai,anthropic,mcp,gemini,cli,swarm]"]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=6.0",
+    "pytest-asyncio>=0.24",
+    "ruff>=0.11",
+    "mypy>=1.15",
+    "aitx[all]",
+]
+
+[project.scripts]
+aitx = "aitx.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/cy2/aitx"
+Repository = "https://github.com/cy2/aitx"
+Issues = "https://github.com/cy2/aitx/issues"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/aitx"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "TCH"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"
+asyncio_mode = "auto"
