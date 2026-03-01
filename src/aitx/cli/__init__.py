@@ -81,7 +81,11 @@ def convert_cmd(
 @click.option("--report", is_flag=True, help="Show conversion warnings")
 @click.pass_context
 def export_cmd(
-    ctx: click.Context, file: Path, target: str, output: Path | None, report: bool,
+    ctx: click.Context,
+    file: Path,
+    target: str,
+    output: Path | None,
+    report: bool,
 ) -> None:
     """Export tool definitions to a target format (auto-detects source)."""
     # Try to auto-detect source format from the JSON structure
@@ -103,8 +107,13 @@ def export_cmd(
 
     click.echo(f"Detected source format: {source}", err=True)
     ctx.invoke(
-        convert_cmd, file=file, source=source, target=target,
-        output=output, report=report, pretty=True,
+        convert_cmd,
+        file=file,
+        source=source,
+        target=target,
+        output=output,
+        report=report,
+        pretty=True,
     )
 
 

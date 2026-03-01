@@ -52,9 +52,7 @@ def _ensure_strict(schema: dict[str, Any]) -> dict[str, Any]:
 
     # additionalProperties as schema
     if isinstance(schema.get("additionalProperties"), dict):
-        schema["additionalProperties"] = _ensure_strict(
-            dict(schema["additionalProperties"])
-        )
+        schema["additionalProperties"] = _ensure_strict(dict(schema["additionalProperties"]))
 
     # oneOf → anyOf
     if "oneOf" in schema:

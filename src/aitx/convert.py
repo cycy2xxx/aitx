@@ -59,20 +59,26 @@ def _parse_mcp(tool: dict[str, Any]) -> tuple[UniversalTool, list[ConversionWarn
 
     # Record what MCP-specific fields will be lost
     if tool.get("title"):
-        warnings.append(ConversionWarning(
-            field="title",
-            message="MCP title has no equivalent in most formats",
-        ))
+        warnings.append(
+            ConversionWarning(
+                field="title",
+                message="MCP title has no equivalent in most formats",
+            )
+        )
     if tool.get("outputSchema"):
-        warnings.append(ConversionWarning(
-            field="outputSchema",
-            message="Output schema not supported in target format",
-        ))
+        warnings.append(
+            ConversionWarning(
+                field="outputSchema",
+                message="Output schema not supported in target format",
+            )
+        )
     if tool.get("annotations"):
-        warnings.append(ConversionWarning(
-            field="annotations",
-            message="MCP annotations (readOnlyHint, destructiveHint, etc.) dropped",
-        ))
+        warnings.append(
+            ConversionWarning(
+                field="annotations",
+                message="MCP annotations (readOnlyHint, destructiveHint, etc.) dropped",
+            )
+        )
 
     return ir, warnings
 
@@ -105,11 +111,13 @@ def _parse_openai_chat(tool: dict[str, Any]) -> tuple[UniversalTool, list[Conver
     )
 
     if func.get("strict"):
-        warnings.append(ConversionWarning(
-            field="strict",
-            message="OpenAI strict mode has no equivalent; schema constraints may differ",
-            severity="info",
-        ))
+        warnings.append(
+            ConversionWarning(
+                field="strict",
+                message="OpenAI strict mode has no equivalent; schema constraints may differ",
+                severity="info",
+            )
+        )
 
     return ir, warnings
 
@@ -168,6 +176,7 @@ def _parse_gemini(tool: dict[str, Any]) -> tuple[UniversalTool, list[ConversionW
 
 # ── Generators ────────────────────────────────────────────────────────
 
+
 def _generate_mcp(ir: UniversalTool) -> tuple[dict[str, Any], list[ConversionWarning]]:
     return {
         "name": ir.name,
@@ -205,10 +214,12 @@ def _generate_gemini(ir: UniversalTool) -> tuple[dict[str, Any], list[Conversion
     # Record potential losses
     schema = ir.to_json_schema()
     if "$ref" in str(schema) or "$defs" in str(schema):
-        warnings.append(ConversionWarning(
-            field="$ref/$defs",
-            message="Gemini does not support $ref; references were inlined",
-        ))
+        warnings.append(
+            ConversionWarning(
+                field="$ref/$defs",
+                message="Gemini does not support $ref; references were inlined",
+            )
+        )
 
     return output, warnings
 

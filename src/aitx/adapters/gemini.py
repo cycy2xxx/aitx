@@ -58,9 +58,7 @@ def _schema_to_gemini(schema: dict[str, Any]) -> dict[str, Any]:
 
     # Recurse into properties
     if "properties" in schema:
-        result["properties"] = {
-            k: _schema_to_gemini(v) for k, v in schema["properties"].items()
-        }
+        result["properties"] = {k: _schema_to_gemini(v) for k, v in schema["properties"].items()}
     if "required" in schema:
         result["required"] = schema["required"]
 

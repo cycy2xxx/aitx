@@ -69,8 +69,7 @@ def inline_refs(
     # Recurse into properties
     if "properties" in result:
         result["properties"] = {
-            k: inline_refs(v, root, max_depth, _depth + 1)
-            for k, v in result["properties"].items()
+            k: inline_refs(v, root, max_depth, _depth + 1) for k, v in result["properties"].items()
         }
 
     # Recurse into items
@@ -86,9 +85,7 @@ def inline_refs(
     # Recurse into combinators
     for key in ("anyOf", "oneOf", "allOf"):
         if key in result and isinstance(result[key], list):
-            result[key] = [
-                inline_refs(s, root, max_depth, _depth + 1) for s in result[key]
-            ]
+            result[key] = [inline_refs(s, root, max_depth, _depth + 1) for s in result[key]]
 
     # Recurse into prefixItems (tuple)
     if "prefixItems" in result and isinstance(result["prefixItems"], list):

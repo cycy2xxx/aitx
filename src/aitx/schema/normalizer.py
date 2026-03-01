@@ -32,9 +32,7 @@ def normalize_schema(schema: dict[str, Any]) -> dict[str, Any]:
 
     # Recurse into properties
     if "properties" in result:
-        result["properties"] = {
-            k: normalize_schema(v) for k, v in result["properties"].items()
-        }
+        result["properties"] = {k: normalize_schema(v) for k, v in result["properties"].items()}
 
     # Recurse into items
     if isinstance(result.get("items"), dict):
@@ -51,8 +49,6 @@ def normalize_schema(schema: dict[str, Any]) -> dict[str, Any]:
 
     # Recurse into $defs
     if "$defs" in result:
-        result["$defs"] = {
-            k: normalize_schema(v) for k, v in result["$defs"].items()
-        }
+        result["$defs"] = {k: normalize_schema(v) for k, v in result["$defs"].items()}
 
     return result

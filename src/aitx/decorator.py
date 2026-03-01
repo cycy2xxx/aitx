@@ -88,7 +88,6 @@ def get_ir(func: Callable[..., Any]) -> UniversalTool:
     ir: UniversalTool | None = getattr(func, "__aitx_tool__", None)
     if ir is None:
         raise AttributeError(
-            f"Function '{func.__name__}' is not an AITX tool. "
-            "Decorate it with @aitx.tool()."
+            f"Function '{func.__name__}' is not an AITX tool. Decorate it with @aitx.tool()."
         )
     return ir
