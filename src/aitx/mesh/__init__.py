@@ -4,8 +4,9 @@ from zeroconf import Zeroconf, ServiceBrowser, ServiceStateChange, ServiceInfo
 
 from .node import MeshNode
 from .client import MeshClient
+from .router import MeshRouter
 
-__all__ = ["MeshNode", "MeshClient", "serve_mesh", "discover_tools"]
+__all__ = ["MeshNode", "MeshClient", "MeshRouter", "serve_mesh", "discover_tools"]
 
 def serve_mesh(name: str, tools: list[Callable[..., Any]], port: int = 8080) -> None:
     """Serve a list of tools over the AITX mesh synchronously."""
