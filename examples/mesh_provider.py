@@ -6,6 +6,7 @@ discover and execute these tools.
 """
 
 import logging
+import platform
 
 import aitx
 from aitx.mesh import serve_mesh
@@ -14,17 +15,16 @@ logging.basicConfig(level=logging.INFO)
 
 
 @aitx.tool()
-def get_system_metrics() -> dict:
-    """Get current system CPU and memory usage.
+def get_system_info() -> dict:
+    """Get basic system information.
 
     Returns:
-        Dict with cpu_percent and memory_percent.
+        Dict with platform, hostname, and Python version.
     """
-    import psutil
-
     return {
-        "cpu_percent": psutil.cpu_percent(),
-        "memory_percent": psutil.virtual_memory().percent,
+        "platform": platform.system(),
+        "hostname": platform.node(),
+        "python_version": platform.python_version(),
     }
 
 
@@ -44,8 +44,8 @@ def analyze_text(text: str) -> dict:
 
 
 if __name__ == "__main__":
-    tools = [get_system_metrics, analyze_text]
-    print("🚀 Starting AITX Mesh Provider 'metrics_node'...")
-    print("   Tools:", [t.__name__ for t in tools])
-    print("   Waiting for consumers...\n")
-    serve_mesh(name="metrics_node", tools=tools, port=8888)
+    tools = [get_system_info, analyze_text]
+    print("Starting AITX Mesh Provider 'demo_node'...")
+    print(f"  Tools: {[t.__name__ for t in tools]}")
+    print("  Waiting for consumers...\n")
+    serve_mesh(name="demo_node", tools=tools, port=8888)

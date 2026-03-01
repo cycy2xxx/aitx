@@ -31,12 +31,17 @@ def test_cli_formats():
 
 def test_cli_convert_mcp_to_openai():
     runner = CliRunner()
-    result = runner.invoke(main, [
-        "convert",
-        str(FIXTURES / "weather_mcp.json"),
-        "--from", "mcp",
-        "--to", "openai-chat",
-    ])
+    result = runner.invoke(
+        main,
+        [
+            "convert",
+            str(FIXTURES / "weather_mcp.json"),
+            "--from",
+            "mcp",
+            "--to",
+            "openai-chat",
+        ],
+    )
     assert result.exit_code == 0
     output = json.loads(result.output)
     assert output["type"] == "function"
@@ -45,13 +50,18 @@ def test_cli_convert_mcp_to_openai():
 
 def test_cli_convert_with_report():
     runner = CliRunner()
-    result = runner.invoke(main, [
-        "convert",
-        str(FIXTURES / "weather_mcp.json"),
-        "--from", "mcp",
-        "--to", "openai-chat",
-        "--report",
-    ])
+    result = runner.invoke(
+        main,
+        [
+            "convert",
+            str(FIXTURES / "weather_mcp.json"),
+            "--from",
+            "mcp",
+            "--to",
+            "openai-chat",
+            "--report",
+        ],
+    )
     assert result.exit_code == 0
     # Warnings go to stderr
     assert "title" in (result.output + (result.stderr or ""))
@@ -60,13 +70,19 @@ def test_cli_convert_with_report():
 def test_cli_convert_to_file(tmp_path: Path):
     output_file = tmp_path / "output.json"
     runner = CliRunner()
-    result = runner.invoke(main, [
-        "convert",
-        str(FIXTURES / "weather_mcp.json"),
-        "--from", "mcp",
-        "--to", "anthropic",
-        "-o", str(output_file),
-    ])
+    result = runner.invoke(
+        main,
+        [
+            "convert",
+            str(FIXTURES / "weather_mcp.json"),
+            "--from",
+            "mcp",
+            "--to",
+            "anthropic",
+            "-o",
+            str(output_file),
+        ],
+    )
     assert result.exit_code == 0
     assert output_file.exists()
     data = json.loads(output_file.read_text())
@@ -77,12 +93,17 @@ def test_cli_convert_to_file(tmp_path: Path):
 def test_cli_export_auto_detect(tmp_path: Path):
     output_file = tmp_path / "out.json"
     runner = CliRunner()
-    result = runner.invoke(main, [
-        "export",
-        str(FIXTURES / "weather_mcp.json"),
-        "--to", "gemini",
-        "-o", str(output_file),
-    ])
+    result = runner.invoke(
+        main,
+        [
+            "export",
+            str(FIXTURES / "weather_mcp.json"),
+            "--to",
+            "gemini",
+            "-o",
+            str(output_file),
+        ],
+    )
     assert result.exit_code == 0
     data = json.loads(output_file.read_text())
     assert data["parameters"]["type"] == "OBJECT"

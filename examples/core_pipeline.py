@@ -1,7 +1,10 @@
-"""Example: Using aitx with OpenAI (no API key required — shows schema only).
+"""Example: Using aitx with OpenAI, Anthropic, and Gemini.
 
 Demonstrates the core value proposition: decorate a function once,
-get ready-to-use schemas for any platform.
+get ready-to-use schemas for any platform, and dispatch tool calls
+without any boilerplate.
+
+No API keys required — this example uses simulated responses.
 """
 
 import json
@@ -37,17 +40,21 @@ print("=" * 60)
 print("AITX Core Pipeline Demo")
 print("=" * 60)
 
-# ── Schema Generation ─────────────────────────────────────────
-print("\n📋 OpenAI schemas:")
+# -- Schema Generation ------------------------------------------------
+print("\n[OpenAI schemas]")
 for schema in aitx.to_openai(tools):
     print(json.dumps(schema, indent=2))
 
-print("\n📋 Anthropic schemas:")
+print("\n[Anthropic schemas]")
 for schema in aitx.to_anthropic(tools):
     print(json.dumps(schema, indent=2))
 
-# ── Dispatch Simulation ──────────────────────────────────────
-print("\n⚡ Simulating OpenAI tool call dispatch:")
+print("\n[Gemini schemas]")
+for schema in aitx.to_gemini(tools):
+    print(json.dumps(schema, indent=2))
+
+# -- Dispatch Simulation -----------------------------------------------
+print("\n[Simulating OpenAI tool call dispatch]")
 fake_openai_response = {
     "choices": [
         {
@@ -69,7 +76,7 @@ fake_openai_response = {
 results = aitx.handle_openai(fake_openai_response, tools)
 print(json.dumps(results, indent=2))
 
-print("\n⚡ Simulating Anthropic tool call dispatch:")
+print("\n[Simulating Anthropic tool call dispatch]")
 fake_anthropic_response = {
     "content": [
         {
@@ -83,4 +90,24 @@ fake_anthropic_response = {
 results = aitx.handle_anthropic(fake_anthropic_response, tools)
 print(json.dumps(results, indent=2))
 
-print("\n✨ Same functions. Any platform. Zero boilerplate.")
+print("\n[Simulating Gemini tool call dispatch]")
+fake_gemini_response = {
+    "candidates": [
+        {
+            "content": {
+                "parts": [
+                    {
+                        "functionCall": {
+                            "name": "get_weather",
+                            "args": {"city": "Osaka", "units": "fahrenheit"},
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}
+results = aitx.handle_gemini(fake_gemini_response, tools)
+print(json.dumps(results, indent=2))
+
+print("\nSame functions. Any platform. Zero boilerplate.")
