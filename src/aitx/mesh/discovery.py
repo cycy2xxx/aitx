@@ -1,16 +1,25 @@
+"""MeshAdvertiser: mDNS service advertisement for AITX mesh nodes."""
+from __future__ import annotations
+
 import asyncio
-import socket
-from zeroconf import ServiceInfo, Zeroconf
 import logging
+import socket
+
+from zeroconf import ServiceInfo, Zeroconf
 
 logger = logging.getLogger(__name__)
 
+
 class MeshAdvertiser:
-    """Advertises an AITX mesh node over mDNS using zeroconf."""
-    
+    """Broadcasts the presence of an AITX mesh node on the local network.
+
+    Uses zeroconf to register a ``_aitx._tcp.local.`` mDNS service so that
+    :class:`~aitx.mesh.router.MeshRouter` instances can discover it.
+    """
+
     SERVICE_TYPE = "_aitx._tcp.local."
 
-    def __init__(self, name: str, port: int):
+    def __init__(self, name: str, port: int) -> None:
         self.name = name
         self.port = port
         self.is_running = False
@@ -18,7 +27,7 @@ class MeshAdvertiser:
         self._info: ServiceInfo | None = None
 
     async def start(self) -> None:
-        """Starts advertising the service."""
+        """Register the mDNS service and begin advertising."""
         if self.is_running:
             return
 
@@ -34,24 +43,30 @@ class MeshAdvertiser:
             server=f"{hostname}.local.",
         )
 
-        # Run zeroconf blocking calls in an executor
         loop = asyncio.get_running_loop()
         self._zeroconf = await loop.run_in_executor(None, Zeroconf)
-        await loop.run_in_executor(None, self._zeroconf.register_service, self._info)
-        
+        await loop.run_in_executor(
+            None, self._zeroconf.register_service, self._info
+        )
+
         self.is_running = True
-        logger.info(f"Advertising AITX mesh node '{self.name}' on {local_ip}:{self.port}")
+        logger.info(
+            "Advertising AITX mesh node '%s' on %s:%d",
+            self.name, local_ip, self.port,
+        )
 
     async def stop(self) -> None:
-        """Stops advertising the service."""
+        """Unregister the mDNS service and stop advertising."""
         if not self.is_running or not self._zeroconf or not self._info:
             return
 
         loop = asyncio.get_running_loop()
-        await loop.run_in_executor(None, self._zeroconf.unregister_service, self._info)
+        await loop.run_in_executor(
+            None, self._zeroconf.unregister_service, self._info
+        )
         await loop.run_in_executor(None, self._zeroconf.close)
-        
+
         self._zeroconf = None
         self._info = None
         self.is_running = False
-        logger.info(f"Stopped advertising AITX mesh node '{self.name}'")
+        logger.info("Stopped advertising AITX mesh node '%s'", self.name)

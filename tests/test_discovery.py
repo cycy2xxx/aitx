@@ -1,6 +1,8 @@
+
 import pytest
-import socket
+
 from aitx.mesh.discovery import MeshAdvertiser
+
 
 def test_mesh_advertiser_init():
     advertiser = MeshAdvertiser("test_node", 8080)
