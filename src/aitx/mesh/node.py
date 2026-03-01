@@ -1,0 +1,2 @@
+class MeshNode:
+    pass
