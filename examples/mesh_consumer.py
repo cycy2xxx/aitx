@@ -3,6 +3,7 @@
 This script demonstrates automatic tool routing: you don't need to know
 which node hosts which tool — the router handles it transparently.
 """
+
 import asyncio
 import logging
 from aitx.mesh import MeshRouter

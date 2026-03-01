@@ -17,7 +17,7 @@ import logging
 import socket
 from typing import TYPE_CHECKING, Any
 
-from zeroconf import ServiceBrowser, Zeroconf
+from zeroconf import ServiceBrowser, ServiceListener, Zeroconf
 
 from .client import MeshClient
 from .node import MeshNode
@@ -61,7 +61,7 @@ def serve_mesh(
         asyncio.run(_run())
 
 
-class _DiscoverListener:
+class _DiscoverListener(ServiceListener):
     """Internal zeroconf listener for one-shot discovery."""
 
     def __init__(self) -> None:
@@ -91,10 +91,7 @@ async def discover_tools(timeout: float = 3.0) -> list[dict[str, Any]]:
     listener = _DiscoverListener()
     browser = await loop.run_in_executor(
         None,
-        ServiceBrowser,
-        zc,
-        "_aitx._tcp.local.",
-        listener,
+        lambda: ServiceBrowser(zc, "_aitx._tcp.local.", listener),
     )
 
     await asyncio.sleep(timeout)

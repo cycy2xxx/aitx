@@ -12,7 +12,7 @@ import logging
 import socket
 from typing import Any
 
-from zeroconf import ServiceBrowser, Zeroconf
+from zeroconf import ServiceBrowser, ServiceListener, Zeroconf
 
 from .client import MeshClient
 
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 # ── Internal zeroconf listener ────────────────────────────────────────
 
 
-class _RouterListener:
+class _RouterListener(ServiceListener):
     """Zeroconf callback handler — called from a *background thread*."""
 
     def __init__(self, router: MeshRouter) -> None:
@@ -30,7 +30,7 @@ class _RouterListener:
 
     def add_service(self, zc: Zeroconf, type_: str, name: str) -> None:
         info = zc.get_service_info(type_, name)
-        if info and info.addresses:
+        if info and info.addresses and info.port is not None:
             host = socket.inet_ntoa(info.addresses[0])
             node_name = name.replace("._aitx._tcp.local.", "")
             self._router._register_node(node_name, host, info.port)
@@ -91,12 +91,10 @@ class MeshRouter:
         self._loop = asyncio.get_running_loop()
         self._zeroconf = await self._loop.run_in_executor(None, Zeroconf)
         listener = _RouterListener(self)
+        zc = self._zeroconf
         self._browser = await self._loop.run_in_executor(
             None,
-            ServiceBrowser,
-            self._zeroconf,
-            self.SERVICE_TYPE,
-            listener,
+            lambda: ServiceBrowser(zc, self.SERVICE_TYPE, listener),
         )
         logger.info("MeshRouter started — listening for AITX nodes")
 
@@ -163,7 +161,9 @@ class MeshRouter:
         node_name = self._tool_index.get(tool_name)
         if not node_name or node_name not in self.nodes:
             return None
-        return self.nodes[node_name]["tools"].get(tool_name)
+        tools: dict[str, Any] = self.nodes[node_name].get("tools", {})
+        result: dict[str, Any] | None = tools.get(tool_name)
+        return result
 
     async def execute(
         self,

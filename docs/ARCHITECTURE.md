@@ -257,11 +257,8 @@ src/aitx/
 │   ├── __init__.py          # Adapter registry
 │   ├── base.py              # FormatAdapter ABC
 │   ├── openai_chat.py       # OpenAI Chat Completions
-│   ├── openai_responses.py  # OpenAI Responses API (Phase 1)
 │   ├── anthropic.py         # Anthropic Claude
-│   ├── gemini.py            # Google Gemini (Phase 1)
-│   ├── mcp.py               # MCP server
-│   └── openclaw.py          # OpenClaw (Phase 2)
+│   └── gemini.py            # Google Gemini
 ├── schema/
 │   ├── __init__.py
 │   ├── normalizer.py        # JSON Schema normalization
@@ -269,27 +266,34 @@ src/aitx/
 │   └── strict_mode.py       # OpenAI strict mode compliance
 ├── bridge/
 │   ├── __init__.py
-│   ├── dispatcher.py        # Universal tool call dispatch engine
-│   └── validation.py        # Runtime argument validation
+│   └── dispatcher.py        # Universal tool call dispatch engine
+├── mesh/
+│   ├── __init__.py          # serve_mesh(), discover_tools()
+│   ├── node.py              # MeshNode: HTTP server + mDNS
+│   ├── client.py            # MeshClient: async HTTP client
+│   ├── router.py            # MeshRouter: auto-discovery + routing
+│   └── discovery.py         # MeshAdvertiser: mDNS registration
 └── cli/
-    └── __init__.py          # CLI: aitx export, aitx convert, aitx serve
+    └── __init__.py          # CLI: aitx convert, aitx export, aitx formats
 ```
 
 ## Phase Plan
 
-### Phase 0 (MVP)
+### Phase 0 (Complete)
 - `@aitx.tool()` decorator with introspection
 - `to_openai()` + `handle_openai()`
 - `to_anthropic()` + `handle_anthropic()`
-- `to_mcp()` + `serve_mcp()`
+- `to_gemini()` + `handle_gemini()`
+- Async dispatch (`handle_*_async()`, `dispatch_async()`)
+- P2P Mesh Network (MeshNode, MeshRouter, MeshClient)
 - Dispatch engine
-- JSON-to-JSON `convert()` for schema export
-- CLI basics
+- JSON-to-JSON `convert()` with loss reporting
+- Schema normalization, $ref inlining, strict mode
+- CLI: `aitx convert`, `aitx export`, `aitx formats`
 
 ### Phase 1
-- Gemini adapter
+- MCP server adapter (`to_mcp()`, `serve_mcp()`)
 - OpenAI Responses API adapter
-- Async tool support (`async def`)
 - Streaming results
 - Pydantic model return types
 

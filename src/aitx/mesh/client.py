@@ -48,8 +48,9 @@ class MeshClient:
         async with session.get(f"{self.base_url}/tools") as resp:
             if resp.status != 200:
                 raise RuntimeError(f"Failed to fetch tools (HTTP {resp.status})")
-            data = await resp.json()
-            return data.get("tools", {})
+            data: dict[str, Any] = await resp.json()
+            result: dict[str, Any] = data.get("tools", {})
+            return result
 
     async def execute(
         self,

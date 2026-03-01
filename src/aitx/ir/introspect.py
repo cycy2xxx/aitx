@@ -7,7 +7,8 @@ into a ``UniversalTool`` IR object.
 from __future__ import annotations
 
 import inspect
-from typing import Any, get_type_hints
+import types
+from typing import Any, Union, get_args, get_origin, get_type_hints
 
 from .types import ToolParameter, UniversalTool
 
@@ -22,16 +23,73 @@ _TYPE_MAP: dict[type, str] = {
 }
 
 
-def _python_type_to_json(tp: type | None) -> str:
-    """Convert a Python type annotation to a JSON Schema type string."""
+def _python_type_to_json_schema(tp: Any) -> dict[str, Any]:
+    """Convert a Python type annotation to a JSON Schema property dict.
+
+    Handles generics like ``list[str]``, ``dict[str, int]``,
+    ``Optional[str]``, and ``str | None``.
+    """
     if tp is None or tp is inspect.Parameter.empty:
-        return "string"
-    origin = getattr(tp, "__origin__", None)
+        return {"type": "string"}
+
+    origin = get_origin(tp)
+    args = get_args(tp)
+
+    # Handle Union types (Optional[X] = Union[X, None], X | None)
+    if origin is Union or origin is types.UnionType:
+        non_none = [a for a in args if a is not type(None)]
+        has_none = len(non_none) < len(args)
+        if len(non_none) == 1:
+            inner = _python_type_to_json_schema(non_none[0])
+            if has_none:
+                return {"anyOf": [inner, {"type": "null"}]}
+            return inner
+        # Multi-type union
+        variants = [_python_type_to_json_schema(a) for a in non_none]
+        if has_none:
+            variants.append({"type": "null"})
+        return {"anyOf": variants}
+
+    # list[X] → {"type": "array", "items": X}
     if origin is list:
-        return "array"
+        out: dict[str, Any] = {"type": "array"}
+        if args:
+            out["items"] = _python_type_to_json_schema(args[0])
+        return out
+
+    # dict[K, V] → {"type": "object", "additionalProperties": V}
     if origin is dict:
-        return "object"
-    return _TYPE_MAP.get(tp, "string")
+        out = {"type": "object"}
+        if len(args) >= 2:
+            out["additionalProperties"] = _python_type_to_json_schema(args[1])
+        return out
+
+    # tuple[X, Y, ...] → {"type": "array", "prefixItems": [...]}
+    if origin is tuple:
+        out = {"type": "array"}
+        if args:
+            out["prefixItems"] = [_python_type_to_json_schema(a) for a in args]
+        return out
+
+    # set[X] → {"type": "array", "items": X, "uniqueItems": true}
+    if origin is set or origin is frozenset:
+        out = {"type": "array", "uniqueItems": True}
+        if args:
+            out["items"] = _python_type_to_json_schema(args[0])
+        return out
+
+    # Plain types
+    json_type = _TYPE_MAP.get(tp, "string")
+    return {"type": json_type}
+
+
+def _python_type_to_json(tp: type | None) -> str:
+    """Convert a Python type annotation to a simple JSON Schema type string.
+
+    For backward compat: returns the top-level type string only.
+    """
+    result = _python_type_to_json_schema(tp)
+    return str(result.get("type", "string"))
 
 
 def _parse_docstring_params(docstring: str | None) -> dict[str, str]:
@@ -57,7 +115,9 @@ def _parse_docstring_params(docstring: str | None) -> dict[str, str]:
                 break
             if ":" in stripped:
                 param, _, desc = stripped.partition(":")
-                descriptions[param.strip()] = desc.strip()
+                # Handle "param (type): desc" pattern
+                param_name = param.strip().split("(")[0].strip()
+                descriptions[param_name] = desc.strip()
     return descriptions
 
 
@@ -79,7 +139,7 @@ def introspect(func: Any) -> UniversalTool:
     Parses:
     - Function name
     - Docstring description + per-parameter descriptions (Google style)
-    - Type hints → JSON Schema types
+    - Type hints → JSON Schema types (including generics)
     - Default values → optional parameters
     """
     # Handle wrapped functions (e.g. from @aitx.tool())
@@ -98,17 +158,25 @@ def introspect(func: Any) -> UniversalTool:
     for name, param in sig.parameters.items():
         if name == "self":
             continue
-        tp = _python_type_to_json(hints.get(name))
+        tp = hints.get(name)
+        json_type = _python_type_to_json(tp)
+        json_schema = _python_type_to_json_schema(tp)
         is_required = param.default is inspect.Parameter.empty
         default = None if is_required else param.default
 
         parameters.append(
             ToolParameter(
                 name=name,
-                type=tp,
+                type=json_type,
                 description=param_docs.get(name, ""),
                 required=is_required,
                 default=default,
+                enum=None,
+                json_schema_override=(
+                    json_schema
+                    if json_schema.get("type") != json_type or len(json_schema) > 1
+                    else None
+                ),
             )
         )
 

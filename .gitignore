@@ -27,3 +27,4 @@ htmlcov/
 
 # ruff
 .ruff_cache/
+provider.log

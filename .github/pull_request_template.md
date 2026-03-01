@@ -9,8 +9,9 @@ Brief description of what this PR does.
 ## Testing
 
 - [ ] Added/updated tests
-- [ ] All tests pass (`npm run test`)
-- [ ] Type checks pass (`npm run typecheck`)
+- [ ] All tests pass (`uv run pytest`)
+- [ ] Type checks pass (`uv run mypy src/`)
+- [ ] Lint passes (`uv run ruff check src/`)
 
 ## Conversion accuracy
 

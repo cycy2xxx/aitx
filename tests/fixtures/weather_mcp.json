@@ -1,0 +1,24 @@
+{
+  "name": "get_weather",
+  "title": "Weather Tool",
+  "description": "Get current weather for a city",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "city": {
+        "type": "string",
+        "description": "City name"
+      },
+      "units": {
+        "type": "string",
+        "enum": ["celsius", "fahrenheit"],
+        "default": "celsius"
+      }
+    },
+    "required": ["city"]
+  },
+  "annotations": {
+    "readOnlyHint": true,
+    "openWorldHint": true
+  }
+}

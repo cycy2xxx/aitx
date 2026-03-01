@@ -65,8 +65,7 @@ def tool(
             return fn(*args, **kwargs)
 
         wrapper.__aitx_tool__ = ir  # type: ignore[attr-defined]
-        wrapper.__wrapped__ = fn  # type: ignore[attr-defined]
-        _registry[ir.name] = wrapper  # type: ignore[assignment]
+        _registry[ir.name] = wrapper
         return wrapper  # type: ignore[return-value]
 
     if func is not None:
@@ -86,9 +85,10 @@ def get_ir(func: Callable[..., Any]) -> UniversalTool:
 
     Raises ``AttributeError`` if the function is not decorated with ``@tool``.
     """
-    ir = getattr(func, "__aitx_tool__", None)
+    ir: UniversalTool | None = getattr(func, "__aitx_tool__", None)
     if ir is None:
         raise AttributeError(
-            f"Function '{func.__name__}' is not an AITX tool. Decorate it with @aitx.tool()."
+            f"Function '{func.__name__}' is not an AITX tool. "
+            "Decorate it with @aitx.tool()."
         )
     return ir

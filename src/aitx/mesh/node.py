@@ -69,7 +69,7 @@ def create_app(tools: list[Callable[..., Any]]) -> web.Application:
         except TypeError as e:
             return web.json_response({"error": f"Bad arguments: {e}"}, status=400)
         except Exception as e:
-            logger.exception(f"Error executing tool '{tool_name}'")
+            logger.exception("Error executing tool '%s'", tool_name)
             return web.json_response({"error": str(e)}, status=500)
 
     app.router.add_get("/tools", list_tools)

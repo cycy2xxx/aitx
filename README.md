@@ -22,35 +22,29 @@ That's it. Now use it everywhere:
 # With OpenAI
 tools = aitx.to_openai([get_weather])
 response = client.chat.completions.create(model="gpt-4o", messages=msgs, tools=tools)
-result = aitx.handle_openai(response, [get_weather])  # auto-dispatch + format
+results = aitx.handle_openai(response, [get_weather])  # auto-dispatch + format
 
 # With Anthropic
 tools = aitx.to_anthropic([get_weather])
 response = client.messages.create(model="claude-sonnet-4-20250514", messages=msgs, tools=tools)
-result = aitx.handle_anthropic(response, [get_weather])
+results = aitx.handle_anthropic(response, [get_weather])
 
 # With Gemini
 tools = aitx.to_gemini([get_weather])
-
-# As an MCP server
-aitx.serve_mcp([get_weather])  # stdio or HTTP, zero config
-
-# Export raw schemas
-schema = aitx.export("openai-chat", [get_weather])
+results = aitx.handle_gemini(response, [get_weather])
 ```
 
 **One function. Every platform. No boilerplate.**
 
 ## Why aitx?
 
-Every AI platform has its own tool format. To use the same tool on OpenAI, Anthropic, Gemini, and MCP, you currently write the schema 4 times and the dispatch logic 4 times. aitx eliminates all of it.
+Every AI platform has its own tool format. To use the same tool on OpenAI, Anthropic, and Gemini you currently write the schema 3 times and the dispatch logic 3 times. aitx eliminates all of it.
 
 | Without aitx | With aitx |
 |---|---|
 | Write JSON schema per platform | `@aitx.tool()` on your function |
 | Parse tool_calls manually | `aitx.handle_openai(response, tools)` |
 | Format results per platform | Automatic |
-| Separate MCP server code | `aitx.serve_mcp(tools)` |
 
 ## How It Works
 
@@ -65,24 +59,23 @@ aitx inspects your function's **type hints and docstring** to generate tool sche
 │  Build Universal IR  │
 └──────────┬──────────┘
            │
-     ┌─────┴──────┐
-     ▼            ▼            ▼            ▼
-  OpenAI      Anthropic     Gemini        MCP
-  schema       schema       schema       server
-     +            +            +
-  dispatch     dispatch     dispatch
-  handler      handler      handler
+     ┌─────┼──────┐
+     ▼     ▼      ▼          ▼
+  OpenAI Anthropic Gemini   Mesh
+  schema  schema   schema  Network
+     +      +       +
+  dispatch dispatch dispatch
 ```
 
 ## Features
 
 - **`@aitx.tool()` decorator** — Type hints become tool schemas. Docstrings become descriptions.
-- **Schema generation** — `to_openai()`, `to_anthropic()`, `to_gemini()`, `to_mcp()`
+- **Schema generation** — `to_openai()`, `to_anthropic()`, `to_gemini()`
 - **Runtime dispatch** — `handle_openai()`, `handle_anthropic()`, `handle_gemini()` parse tool calls, execute your function, format results
-- **MCP server** — `serve_mcp()` turns any decorated function into a full MCP server
-- **Loss reporting** — Know what's lost when converting between formats
-- **Schema export** — `export()` for raw schema conversion (JSON in, JSON out)
-- **CLI** — `aitx export`, `aitx convert`, `aitx serve` commands
+- **Async support** — `handle_openai_async()`, `handle_anthropic_async()`, `handle_gemini_async()` for async tools
+- **P2P Mesh Network** — `MeshRouter` discovers and routes tools across machines via mDNS
+- **Schema conversion** — `aitx convert` CLI for JSON-to-JSON format conversion with loss reporting
+- **Zero boilerplate** — Your function is the single source of truth
 
 ## Installation
 
@@ -92,7 +85,8 @@ pip install aitx
 # With platform-specific extras
 pip install aitx[openai]      # OpenAI dispatch support
 pip install aitx[anthropic]   # Anthropic dispatch support
-pip install aitx[mcp]         # MCP server support
+pip install aitx[gemini]      # Gemini dispatch support
+pip install aitx[swarm]       # P2P mesh networking
 pip install aitx[all]         # Everything
 ```
 
@@ -102,125 +96,112 @@ pip install aitx[all]         # Everything
 
 ```python
 import aitx
-from openai import OpenAI
-from anthropic import Anthropic
 
 @aitx.tool()
 def search(query: str, limit: int = 5) -> list[dict]:
     """Search documents by keyword."""
     return [{"title": f"Result for '{query}'", "score": 0.95}]
 
-@aitx.tool()
-def calculate(expression: str) -> float:
-    """Evaluate a math expression."""
-    return float(eval(expression))
+tools = [search]
 
-tools = [search, calculate]
+# Same tools, different platforms — zero extra work
+openai_schemas = aitx.to_openai(tools)
+anthropic_schemas = aitx.to_anthropic(tools)
+gemini_schemas = aitx.to_gemini(tools)
 
-# Same tools, different platforms
-openai_response = OpenAI().chat.completions.create(
-    model="gpt-4o", messages=msgs, tools=aitx.to_openai(tools)
-)
-result = aitx.handle_openai(openai_response, tools)
-
-anthropic_response = Anthropic().messages.create(
-    model="claude-sonnet-4-20250514", messages=msgs, tools=aitx.to_anthropic(tools)
-)
-result = aitx.handle_anthropic(anthropic_response, tools)
+# Parse + dispatch + format in one call
+results = aitx.handle_openai(openai_response, tools)
+results = aitx.handle_anthropic(anthropic_response, tools)
+results = aitx.handle_gemini(gemini_response, tools)
 ```
 
-### Instant MCP server
+### Async tools
 
 ```python
-import aitx
-
 @aitx.tool()
-def read_file(path: str) -> str:
-    """Read a file and return its contents."""
-    return open(path).read()
+async def fetch_data(url: str) -> dict:
+    """Fetch data from a URL."""
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as resp:
+            return await resp.json()
 
-@aitx.tool()
-def list_files(directory: str = ".") -> list[str]:
-    """List files in a directory."""
-    import os
-    return os.listdir(directory)
-
-# One line: full MCP server over stdio
-aitx.serve_mcp([read_file, list_files])
+# Async dispatch handles both sync and async tools
+results = await aitx.handle_openai_async(response, [fetch_data])
 ```
 
-### AITX Swarm: Zero-Config P2P Mesh
+### JSON-to-JSON schema conversion (CLI)
 
-Turn your tools into discoverable node services on your local network.
+```bash
+# Convert MCP tool definition to OpenAI format
+aitx convert tool.mcp.json --from mcp --to openai-chat
+
+# See what information is lost in conversion
+aitx convert tool.mcp.json --from mcp --to gemini --report
+```
+
+### P2P Mesh: Zero-Config Tool Sharing
+
+Turn your tools into discoverable services across your local network.
 
 ```python
-# On Machine A (Provider)
+# Machine A: serve tools
 from aitx.mesh import serve_mesh
 
 @aitx.tool()
-def calculate(expression: str) -> float:
-    return float(eval(expression))
+def translate(text: str, lang: str = "en") -> str:
+    """Translate text."""
+    return f"[{lang}] {text}"
 
-serve_mesh(name="calculator_node", tools=[calculate])
-
-# On Machine B (Consumer)
-import asyncio
-from aitx.mesh import discover_tools, MeshClient
-
-async def run():
-    # Automatically finds calculator_node via mDNS
-    nodes = await discover_tools()
-    
-    async with MeshClient(nodes[0]["host"], nodes[0]["port"]) as client:
-        result = await client.execute("calculate", {"expression": "100 / 4"})
-        print(result) # 25.0
-
-asyncio.run(run())
+serve_mesh(name="translator", tools=[translate])
 ```
 
-### Schema conversion (JSON to JSON)
-
 ```python
-from aitx import convert
+# Machine B: discover and use tools — routing is automatic
+from aitx.mesh import MeshRouter
 
-# Convert existing MCP tool definition to OpenAI format
-result = convert(mcp_tool_json, source="mcp", target="openai-chat")
-print(result.output)     # OpenAI-compatible schema
-print(result.warnings)   # What was lost
+async with MeshRouter() as router:
+    await asyncio.sleep(2)  # wait for discovery
+    result = await router.execute("translate", {"text": "hello", "lang": "ja"})
+    print(result)  # "[ja] hello"
 ```
 
 ## Supported Platforms
 
 | Platform | Schema Gen | Runtime Dispatch | Status |
 |---|---|---|---|
-| OpenAI Chat Completions | `to_openai()` | `handle_openai()` | Phase 0 |
-| Anthropic Claude | `to_anthropic()` | `handle_anthropic()` | Phase 0 |
-| MCP (Model Context Protocol) | `to_mcp()` | `serve_mcp()` | Phase 0 |
-| OpenAI Responses API | `to_openai_responses()` | `handle_openai_responses()` | Phase 1 |
-| Google Gemini | `to_gemini()` | `handle_gemini()` | Phase 1 |
-| OpenClaw | `to_openclaw()` | — | Phase 2 |
+| OpenAI Chat Completions | `to_openai()` | `handle_openai()` | Implemented |
+| Anthropic Claude | `to_anthropic()` | `handle_anthropic()` | Implemented |
+| Google Gemini | `to_gemini()` | `handle_gemini()` | Implemented |
+| P2P Mesh Network | `MeshRouter` | `router.execute()` | Implemented |
+| Async tools | all `*_async()` variants | `dispatch_async()` | Implemented |
+| MCP (Model Context Protocol) | — | — | Planned |
+| OpenAI Responses API | — | — | Planned |
 
 ## Comparison
 
 | | aitx | LangChain @tool | FastMCP | Composio |
 |---|---|---|---|---|
 | Multi-platform | **All platforms** | LangChain only | MCP only | All (hosted) |
+| P2P Mesh | **Yes** | No | No | No |
+| Framework-free | **Yes** | No | No | No |
+| Async support | **Yes** | Yes | Yes | Yes |
+| Schema conversion CLI | **Yes** | No | No | No |
 | Open source | MIT | MIT | MIT | Freemium |
-| Framework-free | **Yes** | No (requires LangChain) | No (MCP only) | No (their SDK) |
-| Runtime dispatch | **Yes** | Yes (within LC) | Yes (MCP) | Yes |
-| Schema export | **Yes** | Limited | No | No |
 | Python-native | **Yes** | Yes | Yes | Yes |
 
 ## Roadmap
 
-- **Phase 0**: `@aitx.tool()` + OpenAI + Anthropic + MCP (core platforms)
-- **Phase 1**: Gemini, OpenAI Responses API, async tools
-- **Phase 2**: OpenClaw, tool composition, middleware
-- **Phase 3**: Proxy server mode, TypeScript port
+- **Phase 0**: `@aitx.tool()` + OpenAI + Anthropic + Gemini + P2P Mesh + async + CLI
+- **Phase 1**: MCP server, OpenAI Responses API, streaming results
+- **Phase 2**: Tool composition, middleware, OpenClaw integration
+
+## Security
+
+The P2P mesh network uses mDNS for discovery on the local network. Mesh endpoints have **no authentication** by default — any device on the LAN can list and execute tools. Use mesh networking only in trusted environments. Authentication support is planned for a future release.
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines. We welcome contributions of all kinds — new adapters, bug fixes, documentation, and test cases.
 
 ## License
 

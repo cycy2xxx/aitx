@@ -54,7 +54,7 @@ class MyFormatAdapter(FormatAdapter[MyFormatType]):
         ...
 ```
 
-See `src/aitx/adapters/mcp.py` for a reference implementation.
+See `src/aitx/adapters/openai_chat.py` for a reference implementation.
 
 ### Test Cases
 

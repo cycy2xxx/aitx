@@ -33,7 +33,7 @@ A clear description of what the conversion does incorrectly.
 - Source format: (e.g., `mcp`)
 - Target format: (e.g., `openai-chat`)
 - aitx version:
-- Node.js version:
+- Python version:
 
 ## Additional context
 

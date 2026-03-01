@@ -1,6 +1,0 @@
-INFO:aitx.mesh.discovery:Advertising AITX mesh node 'metrics_node' on 127.0.1.1:8888
-INFO:aiohttp.access:127.0.0.1 [01/Mar/2026:11:08:02 +0900] "GET /tools HTTP/1.1" 200 208 "-" "Python/3.12 aiohttp/3.13.3"
-INFO:aiohttp.access:127.0.0.1 [01/Mar/2026:11:08:02 +0900] "POST /execute HTTP/1.1" 200 233 "-" "Python/3.12 aiohttp/3.13.3"
-INFO:aiohttp.access:127.0.0.1 [01/Mar/2026:11:08:35 +0900] "GET /tools HTTP/1.1" 200 208 "-" "Python/3.12 aiohttp/3.13.3"
-INFO:aiohttp.access:127.0.0.1 [01/Mar/2026:11:08:35 +0900] "POST /execute HTTP/1.1" 200 233 "-" "Python/3.12 aiohttp/3.13.3"
-INFO:aiohttp.access:127.0.0.1 [01/Mar/2026:11:08:35 +0900] "POST /execute HTTP/1.1" 200 215 "-" "Python/3.12 aiohttp/3.13.3"

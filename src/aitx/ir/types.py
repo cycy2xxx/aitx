@@ -20,10 +20,15 @@ class ToolParameter(BaseModel):
     required: bool = True
     default: Any = None
     enum: list[Any] | None = None
+    json_schema_override: dict[str, Any] | None = None
 
     def to_json_schema_property(self) -> dict[str, Any]:
         """Convert to a JSON Schema property dict."""
-        prop: dict[str, Any] = {"type": self.type}
+        prop: dict[str, Any]
+        if self.json_schema_override is not None:
+            prop = dict(self.json_schema_override)
+        else:
+            prop = {"type": self.type}
         if self.description:
             prop["description"] = self.description
         if self.default is not None:
