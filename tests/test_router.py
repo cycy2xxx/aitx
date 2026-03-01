@@ -1,4 +1,3 @@
-
 import pytest
 
 from aitx.mesh.router import MeshRouter
@@ -8,6 +7,7 @@ from aitx.mesh.router import MeshRouter
 async def test_mesh_router_init():
     router = MeshRouter()
     assert len(router.nodes) == 0
+
 
 @pytest.mark.asyncio
 async def test_mesh_router_start_stop():

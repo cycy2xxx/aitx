@@ -1,4 +1,3 @@
-
 import pytest
 
 from aitx.mesh.discovery import MeshAdvertiser
@@ -9,6 +8,7 @@ def test_mesh_advertiser_init():
     assert advertiser.name == "test_node"
     assert advertiser.port == 8080
     assert not advertiser.is_running
+
 
 @pytest.mark.asyncio
 async def test_mesh_advertiser_lifecycle():

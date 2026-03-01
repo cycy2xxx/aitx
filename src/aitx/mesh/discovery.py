@@ -1,4 +1,5 @@
 """MeshAdvertiser: mDNS service advertisement for AITX mesh nodes."""
+
 from __future__ import annotations
 
 import asyncio
@@ -45,14 +46,14 @@ class MeshAdvertiser:
 
         loop = asyncio.get_running_loop()
         self._zeroconf = await loop.run_in_executor(None, Zeroconf)
-        await loop.run_in_executor(
-            None, self._zeroconf.register_service, self._info
-        )
+        await loop.run_in_executor(None, self._zeroconf.register_service, self._info)
 
         self.is_running = True
         logger.info(
             "Advertising AITX mesh node '%s' on %s:%d",
-            self.name, local_ip, self.port,
+            self.name,
+            local_ip,
+            self.port,
         )
 
     async def stop(self) -> None:
@@ -61,9 +62,7 @@ class MeshAdvertiser:
             return
 
         loop = asyncio.get_running_loop()
-        await loop.run_in_executor(
-            None, self._zeroconf.unregister_service, self._info
-        )
+        await loop.run_in_executor(None, self._zeroconf.unregister_service, self._info)
         await loop.run_in_executor(None, self._zeroconf.close)
 
         self._zeroconf = None

@@ -1,4 +1,5 @@
 """Tests for MeshClient."""
+
 import pytest
 from aioresponses import aioresponses
 
@@ -38,9 +39,7 @@ async def test_list_tools(mock_aioresponse):
 
 @pytest.mark.asyncio
 async def test_execute(mock_aioresponse):
-    mock_aioresponse.post(
-        "http://127.0.0.1:8080/execute", payload={"result": 42}
-    )
+    mock_aioresponse.post("http://127.0.0.1:8080/execute", payload={"result": 42})
 
     async with MeshClient("127.0.0.1", 8080) as client:
         result = await client.execute("test_tool", {"x": 10})
@@ -49,9 +48,7 @@ async def test_execute(mock_aioresponse):
 
 @pytest.mark.asyncio
 async def test_execute_no_args(mock_aioresponse):
-    mock_aioresponse.post(
-        "http://127.0.0.1:8080/execute", payload={"result": "ok"}
-    )
+    mock_aioresponse.post("http://127.0.0.1:8080/execute", payload={"result": "ok"})
 
     async with MeshClient("127.0.0.1", 8080) as client:
         result = await client.execute("test_tool")

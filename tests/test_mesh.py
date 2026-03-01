@@ -1,8 +1,10 @@
 """Tests for MeshNode and its aiohttp web app."""
+
 import pytest
 from aiohttp import web
 
-from aitx.mesh.node import create_app, introspect
+from aitx.ir.introspect import introspect
+from aitx.mesh.node import create_app
 
 
 def sample_tool(text: str) -> str:
@@ -12,17 +14,18 @@ def sample_tool(text: str) -> str:
 
 def test_mesh_imports():
     import aitx.mesh
+
     assert hasattr(aitx.mesh, "MeshNode")
     assert hasattr(aitx.mesh, "MeshRouter")
 
 
 def test_introspect_produces_valid_schema():
-    schema = introspect(sample_tool)
-    assert schema["name"] == "sample_tool"
-    assert schema["description"] == "A dummy tool for testing."
-    assert "text" in schema["parameters"]["properties"]
-    assert schema["parameters"]["properties"]["text"]["type"] == "string"
-    assert "text" in schema["parameters"]["required"]
+    ir = introspect(sample_tool)
+    assert ir.name == "sample_tool"
+    assert ir.description == "A dummy tool for testing."
+    assert len(ir.parameters) == 1
+    assert ir.parameters[0].name == "text"
+    assert ir.parameters[0].type == "string"
 
 
 @pytest.mark.asyncio
@@ -42,7 +45,7 @@ async def test_mesh_tools_endpoint_schemas(aiohttp_client):
     assert "tools" in data
     tool = data["tools"]["sample_tool"]
     assert tool["name"] == "sample_tool"
-    assert "text" in tool["parameters"]["properties"]
+    assert len(tool["parameters"]) >= 1  # list of ToolParameter dicts
 
 
 @pytest.mark.asyncio
@@ -63,9 +66,7 @@ async def test_mesh_execute_not_found(aiohttp_client):
     app = create_app([sample_tool])
     client = await aiohttp_client(app)
 
-    resp = await client.post(
-        "/execute", json={"tool": "unknown", "arguments": {}}
-    )
+    resp = await client.post("/execute", json={"tool": "unknown", "arguments": {}})
     assert resp.status == 404
 
 
@@ -74,7 +75,5 @@ async def test_mesh_execute_bad_arguments(aiohttp_client):
     app = create_app([sample_tool])
     client = await aiohttp_client(app)
 
-    resp = await client.post(
-        "/execute", json={"tool": "sample_tool", "arguments": {"wrong": 1}}
-    )
+    resp = await client.post("/execute", json={"tool": "sample_tool", "arguments": {"wrong": 1}})
     assert resp.status == 400

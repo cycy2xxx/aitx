@@ -1,4 +1,5 @@
 """MeshClient: HTTP client for interacting with remote AITX mesh nodes."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -34,8 +35,7 @@ class MeshClient:
     def _ensure_session(self) -> aiohttp.ClientSession:
         if self._session is None:
             raise RuntimeError(
-                "Client session not initialised. "
-                "Use 'async with MeshClient(...) as client:'"
+                "Client session not initialised. Use 'async with MeshClient(...) as client:'"
             )
         return self._session
 
@@ -76,7 +76,5 @@ class MeshClient:
         async with session.post(f"{self.base_url}/execute", json=payload) as resp:
             data = await resp.json()
             if resp.status != 200:
-                raise RuntimeError(
-                    f"Remote execution failed: {data.get('error', 'unknown')}"
-                )
+                raise RuntimeError(f"Remote execution failed: {data.get('error', 'unknown')}")
             return data.get("result")

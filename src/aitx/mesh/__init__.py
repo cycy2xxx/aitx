@@ -8,6 +8,7 @@ Provides the public API for the AITX Swarm Mesh feature:
 - :func:`serve_mesh`  — one-liner to start a node (blocking)
 - :func:`discover_tools` — one-shot discovery of all nodes on the LAN
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -89,7 +90,11 @@ async def discover_tools(timeout: float = 3.0) -> list[dict[str, Any]]:
     zc = await loop.run_in_executor(None, Zeroconf)
     listener = _DiscoverListener()
     browser = await loop.run_in_executor(
-        None, ServiceBrowser, zc, "_aitx._tcp.local.", listener,
+        None,
+        ServiceBrowser,
+        zc,
+        "_aitx._tcp.local.",
+        listener,
     )
 
     await asyncio.sleep(timeout)
@@ -102,12 +107,14 @@ async def discover_tools(timeout: float = 3.0) -> list[dict[str, Any]]:
         try:
             async with MeshClient(info["host"], info["port"]) as client:
                 tools = await client.list_tools()
-                results.append({
-                    "node": node_name.replace("._aitx._tcp.local.", ""),
-                    "host": info["host"],
-                    "port": info["port"],
-                    "tools": tools,
-                })
+                results.append(
+                    {
+                        "node": node_name.replace("._aitx._tcp.local.", ""),
+                        "host": info["host"],
+                        "port": info["port"],
+                        "tools": tools,
+                    }
+                )
         except Exception:
             logger.debug("Skipping unreachable node '%s'", node_name)
 

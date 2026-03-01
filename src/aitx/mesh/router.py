@@ -4,6 +4,7 @@ Discovers AITX mesh nodes on the local network via mDNS, indexes every
 tool they expose, and routes ``execute()`` calls to the right node
 without the caller needing to know anything about the network topology.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -91,7 +92,11 @@ class MeshRouter:
         self._zeroconf = await self._loop.run_in_executor(None, Zeroconf)
         listener = _RouterListener(self)
         self._browser = await self._loop.run_in_executor(
-            None, ServiceBrowser, self._zeroconf, self.SERVICE_TYPE, listener,
+            None,
+            ServiceBrowser,
+            self._zeroconf,
+            self.SERVICE_TYPE,
+            listener,
         )
         logger.info("MeshRouter started — listening for AITX nodes")
 
@@ -139,7 +144,9 @@ class MeshRouter:
                     self._tool_index[tool_name] = node_name
                 logger.info(
                     "Indexed %d tool(s) from '%s': %s",
-                    len(tools), node_name, ", ".join(tools.keys()),
+                    len(tools),
+                    node_name,
+                    ", ".join(tools.keys()),
                 )
         except Exception:
             logger.warning("Failed to fetch tools from '%s'", node_name, exc_info=True)
@@ -173,8 +180,7 @@ class MeshRouter:
         node_name = self._tool_index.get(tool_name)
         if not node_name or node_name not in self.nodes:
             raise KeyError(
-                f"Tool '{tool_name}' not found on any mesh node. "
-                f"Available: {self.available_tools}"
+                f"Tool '{tool_name}' not found on any mesh node. Available: {self.available_tools}"
             )
         node = self.nodes[node_name]
         async with MeshClient(node["host"], node["port"]) as client:
